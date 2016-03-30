@@ -1,0 +1,184 @@
+package edu.nyu.pqs.stopwatch.impl;
+
+import edu.nyu.pqs.stopwatch.api.IStopwatch;
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * Two states of StopWatch.
+ */
+enum State {
+  RUNNING, STOPPED;
+}
+
+/**
+ * StopWatch object.
+ * @@lapTimes  laps that have been taken by StopWatch.
+ * @@id        the unique id that specify a StopWatch.
+ * @@state     whether StopWatch is running or stopped.
+ * @@lock      an object used for synchronization.
+ * @@startTime the starting time of a StopWatch.
+ * 
+ * @author BINLI
+ *
+ */
+public class StopWatch implements IStopwatch  {
+  private List<Long> lapTimes;
+  private String id;
+  private State state;
+  // For synchronization purpose.
+  private Object lock;
+  private long startTime;
+  
+  /**
+   * Constructor for StopWatch. Initialize class fields.
+   */
+  public StopWatch(String id) {
+    this.id = id;
+    this.lapTimes = new LinkedList<Long>();
+    this.state = State.STOPPED;
+    this.lock = new Object();
+    this.startTime = 0L;
+  }
+  
+  /**
+   * Returns the Id of this stopwatch
+   * @return the Id of this stopwatch.  Will never be empty or null.
+   */
+  public String getId() {
+    if (this.id == null || this.id.length() == 0) {
+      return null;
+    }
+    return this.id;
+  }
+  
+  /**
+   * Starts the stopwatch.
+   * @throws IllegalStateException if called when the stopwatch is already running
+   */
+  public void start() {
+    synchronized(lock) {
+      if (state == State.RUNNING) {
+        throw new IllegalStateException("the stopwatch is already running.");
+      }
+      startTime = System.currentTimeMillis();
+      state = State.RUNNING;
+    }
+  }
+
+  /**
+   * Stores the time elapsed since the last time lap() was called
+   * or since start() was called if this is the first lap.
+   * @throws IllegalStateException if called when the stopwatch isn't running
+   */
+  public void lap() {
+    synchronized(lock) {
+      if (state == State.STOPPED) {
+        throw new IllegalStateException("The stopwatch already stopped.");
+      }
+      long curTime = System.currentTimeMillis();
+      long diff = curTime - startTime;
+      startTime = curTime;
+      lapTimes.add(diff);
+    }
+  }
+
+  /**
+   * Stops the stopwatch (and records one final lap).
+   * @throws IllegalStateException if called when the stopwatch isn't running
+   */
+  public void stop() {
+    synchronized(lock) {
+      if (state == State.STOPPED) {
+        throw new IllegalStateException("The stopwatch already stopped.");
+      }
+      long curTime = System.currentTimeMillis();
+      long diff = curTime - startTime;
+      lapTimes.add(diff);
+      state = State.STOPPED;
+    }  
+  }
+
+  /**
+   * Resets the stopwatch.  If the stopwatch is running, this method stops the
+   * watch and resets it.  This also clears all recorded laps.
+   */
+  public void reset() {
+    synchronized(lock) {
+      if (state == State.RUNNING) {
+        state = State.STOPPED;
+      }
+      startTime = 0L;
+      lapTimes.clear();
+    }
+  }
+
+  /**
+   * Returns a list of lap times (in milliseconds).  This method can be called at
+   * any time and will not throw an exception.
+   * @return a list of recorded lap times or an empty list if no times are recorded.
+   */
+  public List<Long> getLapTimes() {
+    if (lapTimes.size() == 0) {
+      return new LinkedList<Long>();
+    }
+    return lapTimes;
+  }
+  
+  /**
+   * Compare to StopWatch object.
+   */
+  @Override
+  public boolean equals(Object object) {
+    if (object == this) {
+      return true;
+    }
+    if (!(object instanceof StopWatch)) {
+      return false;
+    }
+    StopWatch other = (StopWatch) object;
+    return other.id.equals(this.id)
+        && other.state.equals(this.state)
+        && other.lapTimes.equals(this.lapTimes);
+  }
+  
+  /**
+   * Return the hashcode for a StopWatch object.
+   */
+  @Override 
+  public int hashCode() {
+    int result = 17;
+    result = 31 * result + this.id.hashCode();
+    result = 31 * result + this.state.hashCode();
+    synchronized(lock) {
+      result = 31 * result + this.lapTimes.hashCode();
+    }
+    return result;
+  }
+  
+  /**
+   * Used for printing out the StopWatch object.
+   */
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("StopWatch: id = " + this.id);
+    if (state == State.RUNNING) {
+      sb.append(", The state is RUNNING. ");
+    } else {
+      sb.append(", The state is Stopped. ");
+    }
+    sb.append("The laps list is: [");
+    synchronized(lock) {
+      for (Long laptime : lapTimes) {
+        sb.append(laptime);
+        sb.append(",");
+      }
+      sb.deleteCharAt(sb.length()-1);
+      sb.append("]");
+    }
+    return sb.toString();  
+  }
+  
+  
+}

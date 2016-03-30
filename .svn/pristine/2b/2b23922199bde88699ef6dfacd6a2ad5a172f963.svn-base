@@ -1,0 +1,24 @@
+Please enter your code review in this file as plain text
+and make sure to include it when you commit your project.
+
+1. For all methods, put what does this method do in javadocs.
+2. If methods need to handle exceptions, we need to put the @Exception tag in javadocs.
+
+
+AddressBook.java
+
+Line 39:      Should specify what information needs to return.
+Line 72-76:   It's better to write a helper function to check if the property belongs to each field of Person.
+Line 97-106:  When methods at line 97 and 106 are both called, it is hard to tell what's the difference,
+			  since they use the same method name. It is more readable if method at line 106 has the name of
+			 "printAllContacts()".
+Line 115:     It's a little hard to understand what does "deleteLocal()" mean. "deleteAll()" will be better.
+Line 134-144: Instead of using s for all fields, it's more readable to give a meaningful name for
+				each field.
+Line 181:     LoadAddressBook() method better returns an AddressBook object.
+
+
+Person.java
+Line 2: Don't use wildcard for import.
+Line 13-17: Personally, I think those fields should not be final. A person may change its address
+			or phone number. We may update the person's information in the future if anything changes.
